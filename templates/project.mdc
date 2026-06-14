@@ -1,0 +1,27 @@
+---
+description: {{PROJECT_NAME}} — project context for AI agents
+globs: {{GLOB_PATTERN}}
+alwaysApply: false
+---
+
+# {{PROJECT_NAME}}
+
+{{ONE_LINE_DESCRIPTION}}
+
+## Key paths
+
+- Repo: `/home/ken/{{PROJECT_DIR}}`
+- Shared assets: `/home/ken/shared` (chat widget, MCP templates)
+
+## Read first
+
+- `AGENTS.md` in this repo for ops and architecture
+
+## Stack
+
+{{STACK}}
+
+## Do not
+
+- Pull in legacy agi.green Vue/RabbitMQ stack for new features
+- Use WIX or heavy CMS for web — vibe-code static HTML or use `shared/web/chat/`

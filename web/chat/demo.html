@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgiChat demo</title>
+  <link rel="stylesheet" href="agi-chat.css">
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body {
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      padding: 1rem;
+      box-sizing: border-box;
+      background: #e8e6dc;
+    }
+    #chat { width: min(720px, 100%); height: calc(100vh - 2rem); }
+  </style>
+</head>
+<body>
+  <div id="chat"></div>
+  <script type="module">
+    import { AgiChat } from './agi-chat.js';
+
+    const replies = [
+      'Here is a **markdown** reply with `inline code`.',
+      'Try Shift+Enter for a newline in your message.',
+      'Wire `onSend` to your Python backend or MCP bridge.',
+    ];
+    let n = 0;
+
+    const chat = new AgiChat(document.getElementById('chat'), {
+      agentName: 'Claude',
+      placeholder: 'Ask anything…',
+      async onSend(text, c) {
+        await c.appendMessage('user', text);
+        c.setTyping(true);
+        await new Promise(r => setTimeout(r, 600 + Math.random() * 400));
+        c.setTyping(false);
+        await c.appendMessage('assistant', replies[n++ % replies.length]);
+      },
+    });
+
+    chat.appendMessage('assistant', 'Demo chat widget from `/home/ken/shared`. No build step required.');
+    chat.focus();
+  </script>
+</body>
+</html>
