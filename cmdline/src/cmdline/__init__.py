@@ -14,6 +14,7 @@ from cmdline.core import (
     verbose,
     _group_flat_aliases,
 )
+from cmdline.output import emit_output, format_grid, json_dumps
 
 __all__ = [
     "CommandGroup",
@@ -23,6 +24,9 @@ __all__ = [
     "cmds",
     "configure_cli_logging",
     "create_parser",
+    "emit_output",
+    "format_grid",
+    "json_dumps",
     "normalize_command_group_subcommand",
     "optarg",
     "run_cli",

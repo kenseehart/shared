@@ -77,6 +77,7 @@ class Cmd:
     hidden: bool = False
     group: str | None = None
     section: str | None = None
+    output: bool = False
 
 
 _CMD_ATTR = "_cmdline_cmd"
@@ -90,6 +91,7 @@ def cmd(
     name: str | None = None,
     aliases: list[str] | None = None,
     hidden: bool = False,
+    output: bool = False,
 ) -> Callable[..., Any]:
     def decorate(f: Callable[..., Any]) -> Callable[..., Any]:
         meta = Cmd(
@@ -98,6 +100,7 @@ def cmd(
             help=(inspect.getdoc(f) or "").strip().split("\n")[0],
             aliases=aliases or [],
             hidden=hidden,
+            output=output,
         )
         setattr(f, _CMD_ATTR, meta)
         return f
@@ -262,6 +265,24 @@ def _add_param_to_parser(
     parser.add_argument(param_name, **kwargs)
 
 
+_OUTPUT_PARAMS = ("json_output", "md_output")
+
+
+def _add_output_flags(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        dest="json_output",
+        help="Output JSON",
+    )
+    parser.add_argument(
+        "--md",
+        action="store_true",
+        dest="md_output",
+        help="Markdown grid output (default: plain-text grid)",
+    )
+
+
 def _bind_and_call(cmd_meta: Cmd, args: argparse.Namespace) -> Any:
     sig = inspect.signature(cmd_meta.fn)
     type_hints = get_type_hints(cmd_meta.fn)
@@ -275,6 +296,9 @@ def _bind_and_call(cmd_meta: Cmd, args: argparse.Namespace) -> Any:
             bound[name] = bool(value)
         else:
             bound[name] = value
+    for name in _OUTPUT_PARAMS:
+        if name in sig.parameters and name not in bound:
+            bound[name] = bool(getattr(args, name, False))
     return cmd_meta.fn(**bound)
 
 
@@ -316,10 +340,12 @@ def create_parser(
             sig = inspect.signature(command.fn)
             hints = get_type_hints(command.fn)
             for pname, param in sig.parameters.items():
-                if pname == "verbose":
+                if pname in ("verbose", *_OUTPUT_PARAMS):
                     continue
                 opt_meta = param.default if isinstance(param.default, OptArg) else None
                 _add_param_to_parser(cmd_parser, pname, param, opt_meta, hints)
+            if command.output:
+                _add_output_flags(cmd_parser)
             cmd_parser.set_defaults(_cmd_meta=command)
 
     return parser
