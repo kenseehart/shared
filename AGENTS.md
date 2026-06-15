@@ -38,7 +38,22 @@ Do **not** pull in Vue, RabbitMQ, or Docker from agi.green for new sites.
 | Path | Role |
 |------|------|
 | `starter_server.py` | FastMCP boilerplate for **project-specific** tool servers |
+| `src/ken_mcp/` | Shared `PersonalAuthProvider` for Claude.ai OAuth MCP connectors |
 | `github/` | Shared **GitHub MCP** install for all projects (issues, PRs, repos) |
+
+## CLI (`cmdline/`)
+
+Decorator-driven argparse framework. Declare commands with `@cmd` on functions; `optarg()` for flags.
+
+```python
+from cmdline import cmd, create_parser, optarg, run_cli, cmds
+```
+
+Install in a project via editable path: `cmdline = { path = "../shared/cmdline", editable = true }`.
+
+See workspace rule **`cli-development`** (`.cursor/rules/cli-development.mdc`).
+
+`commandline.py` at repo root is a deprecated shim — import `cmdline` directly.
 
 ### GitHub MCP (shared)
 
@@ -77,4 +92,8 @@ Register in `/home/ken/.cursor/mcp.json` when the project grows its own server m
 
 ## Deploy notes
 
-Static assets deploy to [my.hosting.com](https://my.hosting.com/) docroots. No build step for `web/chat/`.
+Static assets deploy to [my.hosting.com](https://my.hosting.com/) docroots via the **`host`** platform (`/home/ken/host`). No build step for `web/chat/`.
+
+- Scaffold: `host mkweb "Site" --domain example.com`
+- Manifest: `host.yaml` in each consumer repo
+- MCP OAuth: `ken-mcp` package (`shared/mcp`) — `PersonalAuthProvider` for Claude.ai connectors
