@@ -28,6 +28,7 @@ class OptArg:
     nargs: str | None = None
     hidden: bool = False
     required: bool = False
+    positional: bool = False
 
 
 def optarg(
@@ -43,6 +44,7 @@ def optarg(
     nargs: str | None = None,
     hidden: bool = False,
     required: bool = False,
+    positional: bool = False,
 ) -> OptArg:
     return OptArg(
         default=default,
@@ -56,6 +58,7 @@ def optarg(
         nargs=nargs,
         hidden=hidden,
         required=required,
+        positional=positional,
     )
 
 
@@ -217,6 +220,24 @@ def _add_param_to_parser(
         annotation
     )
 
+    if opt_meta and opt_meta.positional:
+        kwargs = {"help": opt_meta.help}
+        if opt_meta.metavar:
+            kwargs["metavar"] = opt_meta.metavar
+        if opt_meta.choices:
+            kwargs["choices"] = opt_meta.choices
+        if py_type is not None:
+            kwargs["type"] = py_type
+        if opt_meta.nargs:
+            kwargs["nargs"] = opt_meta.nargs
+        elif default is _MISSING or opt_meta.required:
+            pass
+        else:
+            kwargs["nargs"] = "?"
+            kwargs["default"] = default
+        parser.add_argument(param_name, **kwargs)
+        return
+
     if opt_meta and opt_meta.action == "store_true":
         flags = []
         if opt_meta.flag:
@@ -352,8 +373,14 @@ def create_parser(
 
 
 def configure_cli_logging(verbose_enabled: bool) -> None:
-    level = logging.DEBUG if verbose_enabled else logging.INFO
-    logging.basicConfig(level=level, format="%(levelname)s: %(message)s")
+    level = logging.INFO if verbose_enabled else logging.WARNING
+    logging.basicConfig(
+        level=level,
+        format="%(levelname)s: %(message)s",
+        force=True,
+    )
+    for name in ("httpx", "httpcore", "openai"):
+        logging.getLogger(name).setLevel(logging.WARNING)
 
 
 def run_cli(

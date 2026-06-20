@@ -36,16 +36,31 @@ def _kv_table(items: dict[str, Any], *, markdown: bool) -> list[str]:
     return [f"{key:<{width}}  {value}" for key, value in rows]
 
 
-def _dict_list_table(rows: list[dict[str, Any]], *, markdown: bool) -> list[str]:
-    if not rows:
-        return ["(empty)"]
-    columns: list[str] = []
+def _resolve_columns(rows: list[dict[str, Any]], columns: list[str] | None) -> list[str]:
+    if columns:
+        return list(columns)
     seen: set[str] = set()
+    resolved: list[str] = []
     for row in rows:
         for key in row:
             if key not in seen:
                 seen.add(key)
-                columns.append(key)
+                resolved.append(key)
+    return resolved
+
+
+def _project_rows(rows: list[dict[str, Any]], columns: list[str] | None) -> list[dict[str, Any]]:
+    if not columns:
+        return rows
+    return [{col: row.get(col, "") for col in columns} for row in rows]
+
+
+def _dict_list_table(
+    rows: list[dict[str, Any]], *, markdown: bool, columns: list[str] | None = None
+) -> list[str]:
+    if not rows:
+        return ["(empty)"]
+    columns = _resolve_columns(rows, columns)
     if markdown:
         header = "| " + " | ".join(columns) + " |"
         sep = "| " + " | ".join("---" for _ in columns) + " |"
@@ -67,7 +82,9 @@ def _dict_list_table(rows: list[dict[str, Any]], *, markdown: bool) -> list[str]
     return [header, divider, *body]
 
 
-def _format_value(value: Any, *, markdown: bool, indent: int = 0) -> list[str]:
+def _format_value(
+    value: Any, *, markdown: bool, indent: int = 0, columns: list[str] | None = None
+) -> list[str]:
     prefix = "  " * indent
     if _is_scalar(value):
         return [f"{prefix}{_stringify(value)}"]
@@ -80,17 +97,26 @@ def _format_value(value: Any, *, markdown: bool, indent: int = 0) -> list[str]:
                 lines.append(f"{prefix}{line}" if not markdown or line.startswith("|") else line)
         for key, item in nested.items():
             lines.append(f"{prefix}{_heading(key, markdown)}")
-            lines.extend(_format_value(item, markdown=markdown, indent=indent + 1))
+            lines.extend(
+                _format_value(item, markdown=markdown, indent=indent + 1, columns=columns)
+            )
         return lines
     if isinstance(value, list):
         if value and all(isinstance(item, dict) for item in value):
-            table_lines = _dict_list_table(value, markdown=markdown)
+            projected = _project_rows(value, columns)
+            table_lines = _dict_list_table(projected, markdown=markdown, columns=columns)
             return [f"{prefix}{line}" if not markdown or line.startswith("|") else line for line in table_lines]
         return [f"{prefix}- {_stringify(item)}" for item in value]
     return [f"{prefix}{value!s}"]
 
 
-def format_grid(data: Any, *, markdown: bool = False, title: str | None = None) -> str:
+def format_grid(
+    data: Any,
+    *,
+    markdown: bool = False,
+    title: str | None = None,
+    columns: list[str] | None = None,
+) -> str:
     """Render structured data as a human-readable grid (plain text or markdown)."""
     lines: list[str] = []
     if title:
@@ -105,11 +131,12 @@ def format_grid(data: Any, *, markdown: bool = False, title: str | None = None) 
             if lines:
                 lines.append("")
             lines.append(_heading(key, markdown))
-            lines.extend(_format_value(value, markdown=markdown))
+            lines.extend(_format_value(value, markdown=markdown, columns=columns))
     elif isinstance(data, list) and data and all(isinstance(item, dict) for item in data):
-        lines.extend(_dict_list_table(data, markdown=markdown))
+        projected = _project_rows(data, columns)
+        lines.extend(_dict_list_table(projected, markdown=markdown, columns=columns))
     else:
-        lines.extend(_format_value(data, markdown=markdown))
+        lines.extend(_format_value(data, markdown=markdown, columns=columns))
     return "\n".join(lines).rstrip()
 
 
@@ -119,16 +146,45 @@ def emit_output(
     json_output: bool = False,
     md: bool = False,
     title: str | None = None,
+    columns: list[str] | None = None,
     file: TextIO | None = None,
 ) -> None:
     """Print structured command output as JSON or a formatted grid."""
     out = file or sys.stdout
     if json_output:
-        print(json.dumps(data, indent=2, ensure_ascii=False, default=str), file=out)
+        payload = _project_rows(data, columns) if isinstance(data, list) and columns else data
+        print(json.dumps(payload, indent=2, ensure_ascii=False, default=str), file=out)
         return
-    print(format_grid(data, markdown=md, title=title), file=out)
+    print(format_grid(data, markdown=md, title=title, columns=columns), file=out)
 
 
-def json_dumps(data: Any) -> str:
+def json_dumps(data: Any, *, columns: list[str] | None = None) -> str:
     """JSON for MCP tools and other programmatic callers."""
-    return json.dumps(data, indent=2, ensure_ascii=False, default=str)
+    payload = _project_rows(data, columns) if isinstance(data, list) and columns else data
+    return json.dumps(payload, indent=2, ensure_ascii=False, default=str)
+
+
+def format_for_agent(
+    data: Any,
+    *,
+    format: str = "text",
+    title: str | None = None,
+    columns: list[str] | None = None,
+) -> str:
+    """Format structured data for MCP tools: text (default), md, or json."""
+    fmt = format.lower().strip()
+    if fmt == "json":
+        return json_dumps(data, columns=columns)
+    if fmt in ("md", "markdown"):
+        return format_grid(data, markdown=True, title=title, columns=columns)
+    if fmt not in ("text", "plain", ""):
+        raise ValueError(f"Unknown output format: {format!r} (use text, md, or json)")
+    return format_grid(data, markdown=False, title=title, columns=columns)
+
+
+def parse_columns(value: str | None) -> list[str] | None:
+    """Parse comma-separated column names; empty/None returns None (all columns)."""
+    if not value:
+        return None
+    cols = [part.strip() for part in value.split(",") if part.strip()]
+    return cols or None

@@ -3,6 +3,9 @@ name = "cmdline"
 version = "0.1.0"
 description = "Decorator-driven argparse CLI framework"
 requires-python = ">=3.10"
+dependencies = [
+    "tqdm>=4.66.0",
+]
 
 [build-system]
 requires = ["hatchling"]
