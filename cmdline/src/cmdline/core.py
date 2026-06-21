@@ -29,6 +29,7 @@ class OptArg:
     hidden: bool = False
     required: bool = False
     positional: bool = False
+    dest: str | None = None
 
 
 def optarg(
@@ -45,6 +46,7 @@ def optarg(
     hidden: bool = False,
     required: bool = False,
     positional: bool = False,
+    dest: str | None = None,
 ) -> OptArg:
     return OptArg(
         default=default,
@@ -59,6 +61,7 @@ def optarg(
         hidden=hidden,
         required=required,
         positional=positional,
+        dest=dest,
     )
 
 
@@ -134,9 +137,10 @@ class CommandGroup:
         name: str | None = None,
         aliases: list[str] | None = None,
         hidden: bool = False,
+        output: bool = False,
     ) -> Callable[..., Any]:
         def decorate(f: Callable[..., Any]) -> Callable[..., Any]:
-            decorated = cmd(name=name, aliases=aliases, hidden=hidden)(f)
+            decorated = cmd(name=name, aliases=aliases, hidden=hidden, output=output)(f)
             meta: Cmd = getattr(decorated, _CMD_ATTR)
             meta.group = self.name
             self.commands.append(meta)
@@ -263,6 +267,8 @@ def _add_param_to_parser(
         kwargs: dict[str, Any] = {"help": opt_meta.help if opt_meta else ""}
         if opt_meta and opt_meta.metavar:
             kwargs["metavar"] = opt_meta.metavar
+        if opt_meta and opt_meta.dest:
+            kwargs["dest"] = opt_meta.dest
         if opt_meta and opt_meta.choices:
             kwargs["choices"] = opt_meta.choices
         if py_type is not None:
@@ -306,17 +312,21 @@ def _add_output_flags(parser: argparse.ArgumentParser) -> None:
 
 def _bind_and_call(cmd_meta: Cmd, args: argparse.Namespace) -> Any:
     sig = inspect.signature(cmd_meta.fn)
-    type_hints = get_type_hints(cmd_meta.fn)
     bound: dict[str, Any] = {}
     for name, param in sig.parameters.items():
-        if not hasattr(args, name):
+        if name in _OUTPUT_PARAMS:
             continue
-        value = getattr(args, name)
         default, opt_meta = _unwrap_optarg(param.default)
-        if isinstance(param.default, OptArg) and param.default.action == "store_true":
-            bound[name] = bool(value)
-        else:
-            bound[name] = value
+        if hasattr(args, name):
+            value = getattr(args, name)
+            if isinstance(param.default, OptArg) and param.default.action == "store_true":
+                bound[name] = bool(value)
+            else:
+                bound[name] = value
+        elif opt_meta is not None:
+            bound[name] = None if default is _MISSING else default
+        elif default is not inspect.Parameter.empty:
+            bound[name] = default
     for name in _OUTPUT_PARAMS:
         if name in sig.parameters and name not in bound:
             bound[name] = bool(getattr(args, name, False))

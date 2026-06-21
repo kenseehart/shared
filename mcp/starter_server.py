@@ -1,7 +1,7 @@
 """Minimal FastMCP server — copy into a project and extend.
 
 Run standalone:
-  uv run --with fastmcp python /home/ken/shared/mcp/starter_server.py
+  uv run --with fastmcp python /home/ken/ws/shared/mcp/starter_server.py
 """
 
 from __future__ import annotations

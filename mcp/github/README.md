@@ -1,6 +1,6 @@
 # GitHub MCP (shared)
 
-Official [GitHub MCP server](https://github.com/github/github-mcp-server) for Cursor — one install for all projects under `/home/ken`.
+Official [GitHub MCP server](https://github.com/github/github-mcp-server) for Cursor — one install for all projects under `/home/ken/ws`.
 
 ## Quick setup
 
@@ -10,15 +10,15 @@ Official [GitHub MCP server](https://github.com/github/github-mcp-server) for Cu
 
 ```bash
 mkdir -p ~/.config/ken
-cp /home/ken/shared/mcp/github/env.example ~/.config/ken/github-mcp.env
+cp /home/ken/ws/shared/mcp/github/env.example ~/.config/ken/github-mcp.env
 chmod 600 ~/.config/ken/github-mcp.env
 # edit and set GITHUB_PERSONAL_ACCESS_TOKEN=ghp_...
 ```
 
-3. Run the installer (merges into `/home/ken/.cursor/mcp.json`):
+3. Run the installer (merges into `/home/ken/ws/.cursor/mcp.json`):
 
 ```bash
-/home/ken/shared/mcp/github/install.sh
+/home/ken/ws/shared/mcp/github/install.sh
 ```
 
 4. Restart Cursor. In **Settings → Tools & MCP**, confirm **github** shows a green dot.
@@ -40,7 +40,7 @@ See the [tool list](https://github.com/github/github-mcp-server#toolsets) upstre
 | File | Purpose |
 |------|---------|
 | `~/.config/ken/github-mcp.env` | PAT (never commit) |
-| `/home/ken/.cursor/mcp.json` | Workspace MCP config (tesla, nfnc, github, …) |
+| `/home/ken/ws/.cursor/mcp.json` | Workspace MCP config (tesla, nfnc, github, …) |
 | `shared/mcp/github/cursor-snippet.json` | Reference snippet only |
 
 Re-run `install.sh` after rotating the token.

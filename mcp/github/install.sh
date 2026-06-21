@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Merge GitHub MCP config into /home/ken/.cursor/mcp.json using ~/.config/ken/github-mcp.env
+# Merge GitHub MCP config into /home/ken/ws/.cursor/mcp.json using ~/.config/ken/github-mcp.env
 set -euo pipefail
 
 ENV_FILE="${GITHUB_MCP_ENV:-$HOME/.config/ken/github-mcp.env}"
-MCP_JSON="/home/ken/.cursor/mcp.json"
-SNIPPET="/home/ken/shared/mcp/github/cursor-snippet.json"
+MCP_JSON="/home/ken/ws/.cursor/mcp.json"
+SNIPPET="/home/ken/ws/shared/mcp/github/cursor-snippet.json"
 
 if [[ ! -f "$ENV_FILE" ]]; then
   echo "Missing $ENV_FILE"
-  echo "Run: cp /home/ken/shared/mcp/github/env.example $ENV_FILE"
+  echo "Run: cp /home/ken/ws/shared/mcp/github/env.example $ENV_FILE"
   echo "Then set GITHUB_PERSONAL_ACCESS_TOKEN and re-run this script."
   exit 1
 fi

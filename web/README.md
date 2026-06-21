@@ -13,8 +13,8 @@ Static components shared across sites. No build step.
 Preview:
 
 ```bash
-cd /home/ken/shared/web/chat && python3 -m http.server 8766
+cd /home/ken/ws/shared/web/chat && python3 -m http.server 8766
 # open http://127.0.0.1:8766/demo.html
 ```
 
-See **`/home/ken/shared/AGENTS.md`** for integration examples.
+See **`/home/ken/ws/shared/AGENTS.md`** for integration examples.

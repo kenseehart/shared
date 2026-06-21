@@ -4,9 +4,9 @@ Start here for a focused session on **{{PROJECT_NAME}}**.
 
 ## Shared resources
 
-Cross-project assets live in **`/home/ken/shared`** — read `shared/AGENTS.md` for the chat widget, MCP starter, and templates.
+Cross-project assets live in **`/home/ken/ws/shared`** — read `shared/AGENTS.md` for the chat widget, MCP starter, and templates.
 
-Workspace index: **`/home/ken/AGENTS.md`**
+Workspace index: **`/home/ken/ws/AGENTS.md`**
 
 ## What this project is
 
@@ -14,13 +14,13 @@ Workspace index: **`/home/ken/AGENTS.md`**
 
 ## Repo
 
-- Path: **`/home/ken/{{PROJECT_DIR}}`**
+- Path: **`/home/ken/ws/{{PROJECT_DIR}}`**
 - GitHub: {{GITHUB_URL}}
 
 ## Quick start
 
 ```bash
-cd /home/ken/{{PROJECT_DIR}}
+cd /home/ken/ws/{{PROJECT_DIR}}
 # {{QUICK_START_COMMANDS}}
 ```
 

@@ -10,7 +10,7 @@ Single home for assets reused across Ken's projects under `/home/ken`:
 - **Templates**: `AGENTS.md` and Cursor rule starters
 - **MCP**: FastMCP starter for new tool servers; shared GitHub MCP install
 
-Path: **`/home/ken/shared`**
+Path: **`/home/ken/ws/shared`**
 
 ## Chat widget (`web/chat/`)
 
@@ -57,7 +57,7 @@ See workspace rule **`cli-development`** (`.cursor/rules/cli-development.mdc`).
 
 ### GitHub MCP (shared)
 
-One server for the whole workspace — configured in `/home/ken/.cursor/mcp.json`:
+One server for the whole workspace — configured in `/home/ken/ws/.cursor/mcp.json`:
 
 ```bash
 cp shared/mcp/github/env.example ~/.config/ken/github-mcp.env
@@ -72,10 +72,10 @@ See `mcp/github/README.md` for PAT scopes and troubleshooting.
 Minimal server for new project tools. Pattern matches `nfnc` and `tesla`:
 
 ```bash
-cd /home/ken/<project> && uv run python /home/ken/shared/mcp/starter_server.py
+cd /home/ken/ws/<project> && uv run python /home/ken/ws/shared/mcp/starter_server.py
 ```
 
-Register in `/home/ken/.cursor/mcp.json` when the project grows its own server module.
+Register in `/home/ken/ws/.cursor/mcp.json` when the project grows its own server module.
 
 ## agi.green verdict
 
@@ -92,7 +92,7 @@ Register in `/home/ken/.cursor/mcp.json` when the project grows its own server m
 
 ## Deploy notes
 
-Static assets deploy to [my.hosting.com](https://my.hosting.com/) docroots via the **`host`** platform (`/home/ken/host`). No build step for `web/chat/`.
+Static assets deploy to [my.hosting.com](https://my.hosting.com/) docroots via the **`host`** platform (`/home/ken/ws/host`). No build step for `web/chat/`.
 
 - Scaffold: `host mkweb "Site" --domain example.com`
 - Manifest: `host.yaml` in each consumer repo

@@ -10,8 +10,8 @@ alwaysApply: false
 
 ## Key paths
 
-- Repo: `/home/ken/{{PROJECT_DIR}}`
-- Shared assets: `/home/ken/shared` (chat widget, MCP templates)
+- Repo: `/home/ken/ws/{{PROJECT_DIR}}`
+- Shared assets: `/home/ken/ws/shared` (chat widget, MCP templates)
 
 ## Read first
 
