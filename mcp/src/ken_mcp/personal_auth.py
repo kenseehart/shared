@@ -40,13 +40,17 @@ class PersonalAuthProvider(InMemoryOAuthProvider):
         allowed_redirect_domains: Optional[list[str]] = None,
         access_token_expiry_seconds: int = DEFAULT_ACCESS_TOKEN_EXPIRY,
         state_dir: Optional[str] = None,
+        allow_dynamic_registration: bool = False,
     ):
         super().__init__(
             base_url=base_url,
-            client_registration_options=ClientRegistrationOptions(enabled=True),
+            client_registration_options=ClientRegistrationOptions(
+                enabled=allow_dynamic_registration
+            ),
         )
         self._static_client_id = client_id
         self._static_client_secret = client_secret
+        self._allow_dynamic_registration = allow_dynamic_registration
         self.allowed_redirect_domains = allowed_redirect_domains or [
             "claude.ai",
             "claude.com",
@@ -124,6 +128,11 @@ class PersonalAuthProvider(InMemoryOAuthProvider):
             return False
 
     async def register_client(self, client_info: OAuthClientInformationFull) -> None:
+        if not self._allow_dynamic_registration:
+            raise AuthorizeError(
+                error="access_denied",
+                error_description="Dynamic client registration is disabled.",
+            )
         await super().register_client(client_info)
         self._save_state()
 
