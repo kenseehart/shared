@@ -105,3 +105,12 @@ def test_allowlist(monkeypatch):
     v, fake = _verifier_with(None, status=401)
     monkeypatch.setattr(httpx, "AsyncClient", fake)
     assert asyncio.run(v.verify_token("revoked")) is None
+
+
+def test_a_failed_deploy_makes_health_not_ok(app, tmp_path, monkeypatch):
+    status = tmp_path / "deploy-status"
+    status.write_text('{"ok": false, "error": "fish: git fetch failed"}')
+    monkeypatch.setenv("BOX_DEPLOY_STATUS", str(status))
+    with TestClient(app, base_url=BASE) as c:
+        h = c.get("/health")
+        assert h.status_code == 503 and h.json()["deploy"]["error"] == "fish: git fetch failed"

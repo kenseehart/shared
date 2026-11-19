@@ -3,11 +3,13 @@
 The hourly compute audit reads it (urgent when a service is unreachable or a
 disk is nearly full): the 2026-09-12 and 2026-11 outages were both a full disk
 that every write tripped over while reads still worked. It reveals nothing a
-stranger could use: the service name, its git revision and free space.
+stranger could use: the service name, its git revision, free space and, on the
+box, whether the last deploy (box/update.sh, BOX_DEPLOY_STATUS) succeeded.
 """
 
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import subprocess
@@ -32,12 +34,21 @@ def _revision(repo: Path) -> str:
 def health_payload(service: str, repo: Path, paths: list[Path]) -> dict:
     disks = {}
     ok = True
+    deploy = None
+    # On the box, update.sh records its last run; a failed deploy is not ok.
+    status_file = os.getenv("BOX_DEPLOY_STATUS")
+    if status_file:
+        deploy = json.loads(Path(status_file).read_text())
+        ok = ok and bool(deploy.get("ok"))
     for p in paths:
         u = shutil.disk_usage(p)
         free = u.free / u.total
         disks[str(p)] = {"free_fraction": round(free, 4), "free_gb": round(u.free / 1e9, 1)}
         ok = ok and free >= MIN_FREE_FRACTION
-    return {"service": service, "ok": ok, "revision": _revision(repo), "disks": disks}
+    body = {"service": service, "ok": ok, "revision": _revision(repo), "disks": disks}
+    if deploy is not None:
+        body["deploy"] = deploy
+    return body
 
 
 def add_health_route(mcp, *, service: str, repo: str | os.PathLike,
